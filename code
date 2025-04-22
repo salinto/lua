@@ -1,0 +1,58 @@
+getgenv().yena = {
+    Settings = {
+        HoldKey = Enum.KeyCode.C,
+        FOVRadius = 100,
+        WalkSpeedBoost = 50,
+        JumpPowerBoost = 120,
+    },
+    Circle = nil,
+    Holding = false
+}
+
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- Create FOV Circle
+yena.Circle = Drawing.new("Circle")
+yena.Circle.Color = Color3.fromRGB(0, 255, 0)
+yena.Circle.Thickness = 2
+yena.Circle.Transparency = 1
+yena.Circle.Filled = false
+yena.Circle.Radius = yena.Settings.FOVRadius
+
+-- Update Circle Position
+RunService.RenderStepped:Connect(function()
+    local mouseLocation = UserInputService:GetMouseLocation()
+    yena.Circle.Position = Vector2.new(mouseLocation.X, mouseLocation.Y)
+end)
+
+-- Handle Key Hold
+UserInputService.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == yena.Settings.HoldKey then
+        yena.Holding = true
+        if Humanoid then
+            Humanoid.WalkSpeed = yena.Settings.WalkSpeedBoost
+            Humanoid.JumpPower = yena.Settings.JumpPowerBoost
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, processed)
+    if not processed and input.KeyCode == yena.Settings.HoldKey then
+        yena.Holding = false
+        if Humanoid then
+            Humanoid.WalkSpeed = 16 -- Default WalkSpeed
+            Humanoid.JumpPower = 50 -- Default JumpPower
+        end
+    end
+end)
+
+-- Update Humanoid if character respawns
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    Character = newChar
+    Humanoid = Character:WaitForChild("Humanoid")
+end)
